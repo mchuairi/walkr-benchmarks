@@ -1,29 +1,241 @@
 {
-  "atualizado": "2026-08",
-  "nomeMes": "Agosto de 2026",
+  "atualizado": "2026-09",
+  "nomeMes": "Setembro de 2026",
   "observacao": "Retornos mensais em %. null = NAO OBTIDO — nunca estimar, nunca interpolar, nunca repetir o mes anterior.",
   "classes": {
-    "pos":   {"nome": "Pos-fixado",          "bench": "CDI",        "fonte": "BCB SGS 4391"},
-    "pre":   {"nome": "Prefixado",           "bench": "IRF-M",      "fonte": "ANBIMA"},
-    "infl":  {"nome": "Inflacao",            "bench": "IMA-B",      "fonte": "ANBIMA"},
-    "multi": {"nome": "Multimercado",        "bench": "IHFA",       "fonte": "ANBIMA Feed (serie publica descontinuada)"},
-    "fii":   {"nome": "Fundos imobiliarios", "bench": "IFIX",       "fonte": "B3"},
-    "rv":    {"nome": "Acoes Brasil",        "bench": "Ibovespa",   "fonte": "B3"},
-    "cam":   {"nome": "Cambio",              "bench": "Dolar PTAX venda, fim de periodo", "fonte": "BCB SGS 1 (diaria) — NAO usar a 3698, que e media do mes"},
-    "cri":   {"nome": "Cripto",              "bench": "BITH11",     "fonte": "B3 — retorno do ETF, nao do bitcoin"}
+    "pos": {
+      "nome": "Pos-fixado",
+      "bench": "CDI",
+      "fonte": "BCB SGS 4391"
+    },
+    "pre": {
+      "nome": "Prefixado",
+      "bench": "IRF-M",
+      "fonte": "ANBIMA"
+    },
+    "infl": {
+      "nome": "Inflacao",
+      "bench": "IMA-B",
+      "fonte": "ANBIMA"
+    },
+    "multi": {
+      "nome": "Multimercado",
+      "bench": "IHFA",
+      "fonte": "ANBIMA Feed (serie publica descontinuada)"
+    },
+    "fii": {
+      "nome": "Fundos imobiliarios",
+      "bench": "IFIX",
+      "fonte": "B3"
+    },
+    "rv": {
+      "nome": "Acoes Brasil",
+      "bench": "Ibovespa",
+      "fonte": "B3"
+    },
+    "cam": {
+      "nome": "Cambio",
+      "bench": "Dolar PTAX venda, fim de periodo",
+      "fonte": "BCB SGS 1 (diaria) — NAO usar a 3698, que e media do mes"
+    },
+    "cri": {
+      "nome": "Cripto",
+      "bench": "BITH11",
+      "fonte": "B3 — retorno do ETF, nao do bitcoin"
+    }
   },
   "meses": [
-    {"id":"2025-09","nome":"Setembro de 2025","cdi":1.22,"ipca":0.48,"r":{"pos":1.22,"pre":1.26,"infl":0.54,"multi":null,"fii":3.25,"rv":3.40,"cam":-1.99,"cri":3.14}},
-    {"id":"2025-10","nome":"Outubro de 2025","cdi":1.28,"ipca":0.09,"r":{"pos":1.28,"pre":1.37,"infl":1.05,"multi":null,"fii":0.12,"rv":2.26,"cam":1.24,"cri":-2.83}},
-    {"id":"2025-11","nome":"Novembro de 2025","cdi":1.05,"ipca":0.18,"r":{"pos":1.05,"pre":1.67,"infl":2.04,"multi":null,"fii":1.86,"rv":6.37,"cam":-0.94,"cri":-17.71}},
-    {"id":"2025-12","nome":"Dezembro de 2025","cdi":1.22,"ipca":0.33,"r":{"pos":1.22,"pre":0.30,"infl":0.31,"multi":null,"fii":3.14,"rv":1.29,"cam":3.16,"cri":-0.98}},
-    {"id":"2026-01","nome":"Janeiro de 2026","cdi":1.16,"ipca":0.33,"r":{"pos":1.16,"pre":1.96,"infl":1.00,"multi":null,"fii":2.27,"rv":12.56,"cam":-4.95,"cri":-9.19}},
-    {"id":"2026-02","nome":"Fevereiro de 2026","cdi":1.00,"ipca":0.70,"r":{"pos":1.00,"pre":0.99,"infl":1.79,"multi":null,"fii":1.32,"rv":4.09,"cam":-1.54,"cri":-23.23}},
-    {"id":"2026-03","nome":"Marco de 2026","cdi":1.21,"ipca":0.88,"r":{"pos":1.21,"pre":-0.59,"infl":0.17,"multi":-3.42,"fii":-1.06,"rv":-0.70,"cam":1.36,"cri":4.41}},
-    {"id":"2026-04","nome":"Abril de 2026","cdi":1.09,"ipca":0.67,"r":{"pos":1.09,"pre":1.24,"infl":1.81,"multi":null,"fii":1.53,"rv":-0.08,"cam":-4.42,"cri":7.09}},
-    {"id":"2026-05","nome":"Maio de 2026","cdi":1.07,"ipca":0.58,"r":{"pos":1.07,"pre":0.68,"infl":0.31,"multi":null,"fii":-1.33,"rv":-7.22,"cam":1.37,"cri":-2.84}},
-    {"id":"2026-06","nome":"Junho de 2026","cdi":1.12,"ipca":0.16,"r":{"pos":1.12,"pre":0.69,"infl":-1.04,"multi":null,"fii":-1.21,"rv":-1.01,"cam":2.37,"cri":-17.82}},
-    {"id":"2026-07","nome":"Julho de 2026","cdi":1.22,"ipca":0.07,"r":{"pos":1.22,"pre":0.85,"infl":0.97,"multi":null,"fii":-0.32,"rv":3.47,"cam":-1.92,"cri":5.16}},
-    {"id":"2026-08","nome":"Agosto de 2026","cdi":1.09,"ipca":-0.32,"r":{"pos":1.09,"pre":1.04,"infl":1.58,"multi":null,"fii":-1.46,"rv":-0.33,"cam":2.05,"cri":27.40}}
+    {
+      "id": "2025-10",
+      "nome": "Outubro de 2025",
+      "cdi": 1.28,
+      "ipca": 0.09,
+      "r": {
+        "pos": 1.28,
+        "pre": 1.37,
+        "infl": 1.05,
+        "multi": null,
+        "fii": 0.12,
+        "rv": 2.26,
+        "cam": 1.24,
+        "cri": -2.83
+      }
+    },
+    {
+      "id": "2025-11",
+      "nome": "Novembro de 2025",
+      "cdi": 1.05,
+      "ipca": 0.18,
+      "r": {
+        "pos": 1.05,
+        "pre": 1.67,
+        "infl": 2.04,
+        "multi": null,
+        "fii": 1.86,
+        "rv": 6.37,
+        "cam": -0.94,
+        "cri": -17.71
+      }
+    },
+    {
+      "id": "2025-12",
+      "nome": "Dezembro de 2025",
+      "cdi": 1.22,
+      "ipca": 0.33,
+      "r": {
+        "pos": 1.22,
+        "pre": 0.3,
+        "infl": 0.31,
+        "multi": null,
+        "fii": 3.14,
+        "rv": 1.29,
+        "cam": 3.16,
+        "cri": -0.98
+      }
+    },
+    {
+      "id": "2026-01",
+      "nome": "Janeiro de 2026",
+      "cdi": 1.16,
+      "ipca": 0.33,
+      "r": {
+        "pos": 1.16,
+        "pre": 1.96,
+        "infl": 1,
+        "multi": null,
+        "fii": 2.27,
+        "rv": 12.56,
+        "cam": -4.95,
+        "cri": -9.19
+      }
+    },
+    {
+      "id": "2026-02",
+      "nome": "Fevereiro de 2026",
+      "cdi": 1,
+      "ipca": 0.7,
+      "r": {
+        "pos": 1,
+        "pre": 0.99,
+        "infl": 1.79,
+        "multi": null,
+        "fii": 1.32,
+        "rv": 4.09,
+        "cam": -1.54,
+        "cri": -23.23
+      }
+    },
+    {
+      "id": "2026-03",
+      "nome": "Marco de 2026",
+      "cdi": 1.21,
+      "ipca": 0.88,
+      "r": {
+        "pos": 1.21,
+        "pre": -0.59,
+        "infl": 0.17,
+        "multi": -3.42,
+        "fii": -1.06,
+        "rv": -0.7,
+        "cam": 1.36,
+        "cri": 4.41
+      }
+    },
+    {
+      "id": "2026-04",
+      "nome": "Abril de 2026",
+      "cdi": 1.09,
+      "ipca": 0.67,
+      "r": {
+        "pos": 1.09,
+        "pre": 1.24,
+        "infl": 1.81,
+        "multi": null,
+        "fii": 1.53,
+        "rv": -0.08,
+        "cam": -4.42,
+        "cri": 7.09
+      }
+    },
+    {
+      "id": "2026-05",
+      "nome": "Maio de 2026",
+      "cdi": 1.07,
+      "ipca": 0.58,
+      "r": {
+        "pos": 1.07,
+        "pre": 0.68,
+        "infl": 0.31,
+        "multi": null,
+        "fii": -1.33,
+        "rv": -7.22,
+        "cam": 1.37,
+        "cri": -2.84
+      }
+    },
+    {
+      "id": "2026-06",
+      "nome": "Junho de 2026",
+      "cdi": 1.12,
+      "ipca": 0.16,
+      "r": {
+        "pos": 1.12,
+        "pre": 0.69,
+        "infl": -1.04,
+        "multi": null,
+        "fii": -1.21,
+        "rv": -1.01,
+        "cam": 2.37,
+        "cri": -17.82
+      }
+    },
+    {
+      "id": "2026-07",
+      "nome": "Julho de 2026",
+      "cdi": 1.22,
+      "ipca": 0.07,
+      "r": {
+        "pos": 1.22,
+        "pre": 0.85,
+        "infl": 0.97,
+        "multi": null,
+        "fii": -0.32,
+        "rv": 3.47,
+        "cam": -1.92,
+        "cri": 5.16
+      }
+    },
+    {
+      "id": "2026-08",
+      "nome": "Agosto de 2026",
+      "cdi": 1.09,
+      "ipca": -0.32,
+      "r": {
+        "pos": 1.09,
+        "pre": 1.04,
+        "infl": 1.58,
+        "multi": null,
+        "fii": -1.46,
+        "rv": -0.33,
+        "cam": 2.05,
+        "cri": 27.4
+      }
+    },
+    {
+      "id": "2026-09",
+      "nome": "Setembro de 2026",
+      "cdi": 1.08,
+      "ipca": null,
+      "r": {
+        "pos": 1.08,
+        "pre": null,
+        "infl": null,
+        "multi": null,
+        "fii": null,
+        "rv": null,
+        "cam": -0.01,
+        "cri": null
+      }
+    }
   ]
 }
