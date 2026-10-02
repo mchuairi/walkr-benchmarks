@@ -15,12 +15,16 @@
  *   node buscar-anbima.js 2026-08 --debug  (imprime a resposta crua da API)
  */
 
-const BASE  = "https://api.anbima.com.br";
+/* ambiente: producao (padrão) ou sandbox.
+   O sandbox devolve dados FICTÍCIOS — serve só para conferir o formato da
+   resposta enquanto a produção não é liberada. Nunca gravar sandbox no site. */
+const SANDBOX = process.env.ANBIMA_AMBIENTE === "sandbox";
+const BASE  = SANDBOX ? "https://api-sandbox.anbima.com.br" : "https://api.anbima.com.br";
 const TOKEN = BASE + "/oauth/access-token";
 const IMA   = BASE + "/feed/precos-indices/v1/indices-mais/resultados-ima";
 const IHFA  = BASE + "/feed/precos-indices/v1/indices-mais/resultados-ihfa";
 
-const DEBUG = process.argv.includes("--debug");
+const DEBUG = process.argv.includes("--debug") || process.env.ANBIMA_DEBUG === "1";
 
 /* ---------- autenticação: OAuth2 client_credentials ---------- */
 async function autenticar(){
@@ -101,7 +105,8 @@ async function main(){
   else { const d = new Date(); d.setUTCDate(0); ano = d.getUTCFullYear(); mes = d.getUTCMonth()+1; }
   const ant = mes === 1 ? { a: ano-1, m: 12 } : { a: ano, m: mes-1 };
 
-  console.log("ANBIMA · " + String(mes).padStart(2,"0") + "/" + ano);
+  console.log("ANBIMA · " + String(mes).padStart(2,"0") + "/" + ano
+              + (SANDBOX ? "  [SANDBOX — dados fictícios, não usar no site]" : ""));
   const cred = await autenticar();
   console.log("  token obtido");
 
@@ -144,6 +149,7 @@ async function main(){
   console.log("\nRESULTADO " + String(mes).padStart(2,"0") + "/" + ano + ":");
   console.log(JSON.stringify(out));
   /* saída de máquina, para o buscar-benchmarks.js consumir */
+  if(SANDBOX){ console.log("\n[SANDBOX] nada foi gravado — este ambiente só serve para conferir o formato."); process.exit(0); }
   if(process.env.SAIDA_JSON) require("fs").writeFileSync(process.env.SAIDA_JSON, JSON.stringify(out));
   const faltou = Object.values(out).filter(v => v === null).length;
   process.exit(faltou ? 2 : 0);
