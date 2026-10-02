@@ -1,0 +1,48 @@
+name: Atualizar benchmarks
+
+on:
+  schedule:
+    - cron: "0 12 12 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Buscar no Banco Central
+        id: bcb
+        continue-on-error: true
+        run: node scripts/buscar-benchmarks.js
+
+      - name: Buscar na ANBIMA
+        id: anbima
+        continue-on-error: true
+        env:
+          ANBIMA_CLIENT_ID: ${{ secrets.ANBIMA_CLIENT_ID }}
+          ANBIMA_CLIENT_SECRET: ${{ secrets.ANBIMA_CLIENT_SECRET }}
+        run: node scripts/buscar-anbima.js
+
+      - name: Commitar se mudou
+        run: |
+          if git diff --quiet benchmarks.json; then
+            echo "Nada mudou."
+            exit 0
+          fi
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add benchmarks.json
+          git commit -m "benchmarks: $(date -u +%Y-%m)"
+          git push
+
+      - name: Avisar se algum indice ficou sem dado
+        if: steps.bcb.outcome != 'success' || steps.anbima.outcome != 'success'
+        run: echo "::warning::Algum indice ficou como NAO OBTIDO. Abra o log e preencha a mao."
