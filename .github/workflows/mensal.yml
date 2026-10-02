@@ -31,6 +31,11 @@ jobs:
           ANBIMA_CLIENT_SECRET: ${{ secrets.ANBIMA_CLIENT_SECRET }}
         run: node scripts/buscar-anbima.js
 
+      - name: Buscar no mercado
+        id: mercado
+        continue-on-error: true
+        run: node scripts/buscar-mercado.js
+
       - name: Commitar se mudou
         run: |
           if git diff --quiet benchmarks.json; then
@@ -44,5 +49,5 @@ jobs:
           git push
 
       - name: Avisar se algum indice ficou sem dado
-        if: steps.bcb.outcome != 'success' || steps.anbima.outcome != 'success'
+        if: steps.bcb.outcome != 'success' || steps.anbima.outcome != 'success' || steps.mercado.outcome != 'success'
         run: echo "::warning::Algum indice ficou como NAO OBTIDO. Abra o log e preencha a mao."
