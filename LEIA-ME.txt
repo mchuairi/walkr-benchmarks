@@ -1,0 +1,34 @@
+ROBO DOS BENCHMARKS — o que tem nesta pasta
+===========================================
+
+Esta pasta vai para um repositório no GitHub. Ela NÃO é o site.
+O site continua sendo publicado como sempre, arrastando o zip no Netlify.
+
+O QUE CADA ARQUIVO FAZ
+----------------------
+
+benchmarks.json
+  Os retornos mensais dos índices. É o arquivo que o robô atualiza todo mês
+  e que você depois copia para a pasta carteira/ do site.
+
+scripts/buscar-benchmarks.js
+  Busca no Banco Central: CDI, IPCA e dólar PTAX. Público, não precisa de senha.
+
+scripts/buscar-anbima.js
+  Busca na ANBIMA: IRF-M, IMA-B e IHFA. Precisa do Client ID e do Client Secret
+  que você criou no portal de desenvolvedores.
+
+mensal.yml
+  A agenda do robô. O conteúdo dele vai para .github/workflows/mensal.yml
+  dentro do repositório — o passo a passo explica como.
+
+A REGRA QUE NÃO SE QUEBRA
+-------------------------
+Índice que não vier da fonte fica como null. Nunca estimado, nunca interpolado,
+nunca repetido do mês anterior. Na tela a classe aparece como "—".
+Um número errado contamina o relatório de todos os clientes; um buraco honesto não.
+
+O QUE AINDA É MANUAL
+--------------------
+IFIX, Ibovespa e BITH11 continuam sendo digitados à mão. Ibovespa e BITH11 dá
+para automatizar pelo Yahoo Finance; o IFIX não tem fonte automática confiável.
