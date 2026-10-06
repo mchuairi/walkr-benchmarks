@@ -1,11 +1,23 @@
 # Atualiza os benchmarks do mês fechado anterior.
 # Salvar como: .github/workflows/mensal.yml
+#
+# Fonte única: Mais Retorno. Substituiu as três de antes (Banco Central, ANBIMA
+# e Yahoo), que davam três pontos de falha e ainda deixavam o IFIX manual.
 name: Atualizar benchmarks
 
 on:
   schedule:
-    - cron: "0 12 12 * *"   # todo dia 12, meio-dia UTC (IPCA já saiu, IHFA já fechou)
-  workflow_dispatch:         # permite rodar na mão pelo botão "Run workflow"
+    - cron: "0 12 12 * *"   # todo dia 12, meio-dia UTC (o mês anterior já fechou em todas as fontes)
+  workflow_dispatch:
+    inputs:
+      mes:
+        description: "Mês a buscar (AAAA-MM). Vazio = o mês que acabou de fechar."
+        required: false
+        default: ""
+      descobrir:
+        description: "Só conferir se os índices existem, sem gastar crédito"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -13,6 +25,10 @@ permissions:
 jobs:
   atualizar:
     runs-on: ubuntu-latest
+    # A calculadora lê o benchmarks.json que está NA PASTA DELA. Os scripts
+    # antigos gravavam na raiz do repositório, num arquivo que o site nunca abre.
+    env:
+      BENCHMARKS: carteira/benchmarks.json
     steps:
       - uses: actions/checkout@v4
 
@@ -20,45 +36,30 @@ jobs:
         with:
           node-version: "20"
 
-      # O "tee" guarda a saída de cada busca para ela aparecer na primeira tela
-      # do run, em vez de ficar enterrada no log. O "set -o pipefail" mantém o
-      # código de saída do node: sem ele o código seria o do tee, e os avisos
-      # nunca disparariam.
-
-      # Banco Central: CDI, IPCA e dólar PTAX. Público, sem chave.
-      - name: Buscar no Banco Central
-        id: bcb
-        continue-on-error: true      # código 2 = gravou com NÃO OBTIDO; ainda assim comita
-        run: |
-          set -o pipefail
-          node scripts/buscar-benchmarks.js 2>&1 | tee bcb.log
-
-      # ANBIMA: IRF-M, IMA-B e IHFA. Usa as credenciais guardadas em Secrets.
-      - name: Buscar na ANBIMA
-        id: anbima
-        continue-on-error: true
+      # O "tee" guarda a saída para ela aparecer na primeira tela do run, em vez
+      # de ficar enterrada no log. O "set -o pipefail" mantém o código de saída
+      # do node: sem ele o código seria o do tee e os avisos nunca disparariam.
+      - name: Buscar os índices
+        id: busca
+        continue-on-error: true      # código 2 = algum índice faltou; ainda assim comita o resto
         env:
-          ANBIMA_CLIENT_ID:     ${{ secrets.ANBIMA_CLIENT_ID }}
-          ANBIMA_CLIENT_SECRET: ${{ secrets.ANBIMA_CLIENT_SECRET }}
+          MAISRETORNO_API_KEY: ${{ secrets.MAISRETORNO_API_KEY }}
         run: |
           set -o pipefail
-          node scripts/buscar-anbima.js 2>&1 | tee anbima.log
-
-      # Yahoo Finance: Ibovespa e BITH11. Público, sem chave.
-      - name: Buscar no mercado
-        id: mercado
-        continue-on-error: true
-        run: |
-          set -o pipefail
-          node scripts/buscar-mercado.js 2>&1 | tee mercado.log
+          ARGS=""
+          if [ "${{ inputs.descobrir }}" = "true" ]; then ARGS="--descobrir"; fi
+          if [ -n "${{ inputs.mes }}" ]; then ARGS="$ARGS ${{ inputs.mes }}"; fi
+          node scripts/buscar-indices.js $ARGS 2>&1 | tee busca.log
 
       - name: Commitar se mudou
         id: commit
+        if: inputs.descobrir != true
         continue-on-error: true
         run: |
-          ARQ=$(git ls-files '*benchmarks.json' | head -1)
-          if [ -z "$ARQ" ]; then
-            echo "Não achei nenhum benchmarks.json versionado no repositório." | tee commit.log
+          ARQ="$BENCHMARKS"
+          if [ ! -f "$ARQ" ]; then
+            echo "Não achei $ARQ. Confira o caminho em env: BENCHMARKS, no topo deste arquivo." | tee commit.log
+            git ls-files '*benchmarks.json' | sed 's/^/  existe no repo: /' | tee -a commit.log
             exit 1
           fi
           echo "Arquivo: $ARQ" | tee commit.log
@@ -71,7 +72,7 @@ jobs:
           git add "$ARQ"
           git commit -m "benchmarks: $(date -u +%Y-%m)"
           git push
-          echo "Comitado e publicado." | tee -a commit.log
+          echo "Comitado e publicado — o Netlify republica sozinho." | tee -a commit.log
 
       # Põe tudo na primeira tela do run, para não precisar cavar o log.
       - name: Mostrar o resultado no resumo
@@ -80,24 +81,23 @@ jobs:
           {
             echo "# Resultado"
             echo
-            echo "| Fonte | Como terminou |"
+            echo "| Etapa | Como terminou |"
             echo "|---|---|"
-            echo "| Banco Central | ${{ steps.bcb.outcome }} |"
-            echo "| ANBIMA | ${{ steps.anbima.outcome }} |"
-            echo "| Mercado | ${{ steps.mercado.outcome }} |"
+            echo "| Busca dos índices | ${{ steps.busca.outcome }} |"
             echo "| Commit | ${{ steps.commit.outcome }} |"
             echo
-            for par in "ANBIMA:anbima.log" "Banco Central:bcb.log" "Mercado:mercado.log" "Commit:commit.log"; do
-              nome="${par%%:*}"; arq="${par#*:}"
-              echo "## $nome"
-              echo '```'
-              if [ -f "$arq" ]; then cat "$arq"; else echo "(o passo não chegou a rodar)"; fi
-              echo '```'
-              echo
-            done
+            echo "## Busca"
+            echo '```'
+            if [ -f busca.log ]; then cat busca.log; else echo "(não rodou)"; fi
+            echo '```'
+            echo
+            echo "## Commit"
+            echo '```'
+            if [ -f commit.log ]; then cat commit.log; else echo "(não rodou)"; fi
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Avisar se algum índice ficou sem dado
-        if: steps.bcb.outcome != 'success' || steps.anbima.outcome != 'success' || steps.mercado.outcome != 'success'
+        if: steps.busca.outcome != 'success'
         run: |
-          echo "::warning::Algum índice ficou como NÃO OBTIDO. O motivo está no resumo deste run, logo acima."
+          echo "::warning::Algum índice ficou sem valor. O motivo está no resumo deste run, logo acima."
