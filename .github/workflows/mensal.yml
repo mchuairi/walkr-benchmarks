@@ -1,9 +1,11 @@
+# Atualiza os benchmarks do mês fechado anterior.
+# Salvar como: .github/workflows/mensal.yml
 name: Atualizar benchmarks
 
 on:
   schedule:
-    - cron: "0 12 12 * *"
-  workflow_dispatch:
+    - cron: "0 12 12 * *"   # todo dia 12, meio-dia UTC (IPCA já saiu, IHFA já fechou)
+  workflow_dispatch:         # permite rodar na mão pelo botão "Run workflow"
 
 permissions:
   contents: write
@@ -18,19 +20,22 @@ jobs:
         with:
           node-version: "20"
 
+      # Banco Central: CDI, IPCA e dólar PTAX. Público, sem chave.
       - name: Buscar no Banco Central
         id: bcb
-        continue-on-error: true
+        continue-on-error: true      # código 2 = gravou com NÃO OBTIDO; ainda assim comita
         run: node scripts/buscar-benchmarks.js
 
+      # ANBIMA: IRF-M, IMA-B e IHFA. Usa as credenciais guardadas em Secrets.
       - name: Buscar na ANBIMA
         id: anbima
         continue-on-error: true
         env:
-          ANBIMA_CLIENT_ID: ${{ secrets.ANBIMA_CLIENT_ID }}
+          ANBIMA_CLIENT_ID:     ${{ secrets.ANBIMA_CLIENT_ID }}
           ANBIMA_CLIENT_SECRET: ${{ secrets.ANBIMA_CLIENT_SECRET }}
         run: node scripts/buscar-anbima.js
 
+      # Yahoo Finance: Ibovespa e BITH11. Público, sem chave.
       - name: Buscar no mercado
         id: mercado
         continue-on-error: true
@@ -38,16 +43,23 @@ jobs:
 
       - name: Commitar se mudou
         run: |
-          if git diff --quiet benchmarks.json; then
+          ARQ=$(git ls-files '*benchmarks.json' | head -1)
+          if [ -z "$ARQ" ]; then
+            echo "::error::Não achei nenhum benchmarks.json versionado no repositório."
+            exit 1
+          fi
+          echo "Arquivo: $ARQ"
+          if git diff --quiet -- "$ARQ"; then
             echo "Nada mudou."
             exit 0
           fi
           git config user.name  "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git add benchmarks.json
+          git add "$ARQ"
           git commit -m "benchmarks: $(date -u +%Y-%m)"
           git push
 
-      - name: Avisar se algum indice ficou sem dado
+      - name: Avisar se algum índice ficou sem dado
         if: steps.bcb.outcome != 'success' || steps.anbima.outcome != 'success' || steps.mercado.outcome != 'success'
-        run: echo "::warning::Algum indice ficou como NAO OBTIDO. Abra o log e preencha a mao."
+        run: |
+          echo "::warning::Algum índice ficou como NAO OBTIDO. Abra o log, preencha à mão no benchmarks.json e faça commit."
