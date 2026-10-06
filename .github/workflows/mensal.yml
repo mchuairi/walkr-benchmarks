@@ -25,10 +25,10 @@ permissions:
 jobs:
   atualizar:
     runs-on: ubuntu-latest
-    # A calculadora lê o benchmarks.json que está NA PASTA DELA. Os scripts
-    # antigos gravavam na raiz do repositório, num arquivo que o site nunca abre.
+    # Neste repositório o benchmarks.json fica na RAIZ. A pasta carteira/ é do
+    # site, que é outro projeto — não confundir os dois.
     env:
-      BENCHMARKS: carteira/benchmarks.json
+      BENCHMARKS: benchmarks.json
     steps:
       - uses: actions/checkout@v4
 
