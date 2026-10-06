@@ -21,8 +21,23 @@
 const SANDBOX = process.env.ANBIMA_AMBIENTE === "sandbox";
 const BASE  = SANDBOX ? "https://api-sandbox.anbima.com.br" : "https://api.anbima.com.br";
 const TOKEN = BASE + "/oauth/access-token";
-const IMA   = BASE + "/feed/precos-indices/v1/indices-mais/resultados-ima";
-const IHFA  = BASE + "/feed/precos-indices/v1/indices-mais/resultados-ihfa";
+/* O IHFA estava apontado para "resultados-ihfa", que NAO EXISTE na API: o nome
+   do endpoint e "resultados-ihfa-fechado". E como o buscar() trata 404 como
+   "dia sem publicacao", o endereco errado virou "a ANBIMA nao publicou" em
+   silencio — o IHFA ficou 11 dos 12 meses vazio sem ninguem perceber.
+   Os indices tambem vivem em dois grupos ("indices" e "indices-mais") conforme
+   o pacote contratado, entao agora o script DESCOBRE qual caminho responde em
+   vez de adivinhar, e reclama alto se nenhum responder. */
+const IMA_CAMINHOS = [
+  BASE + "/feed/precos-indices/v1/indices-mais/resultados-ima",
+  BASE + "/feed/precos-indices/v1/indices/resultados-ima"
+];
+const IHFA_CAMINHOS = [
+  BASE + "/feed/precos-indices/v1/indices/resultados-ihfa-fechado",
+  BASE + "/feed/precos-indices/v1/indices-mais/resultados-ihfa-fechado",
+  BASE + "/feed/precos-indices/v1/indices-mais/resultados-ihfa",
+  BASE + "/feed/precos-indices/v1/indices/resultados-ihfa"
+];
 
 const DEBUG = process.argv.includes("--debug") || process.env.ANBIMA_DEBUG === "1";
 
@@ -98,6 +113,51 @@ function ultimoDiaUtilCom(buscaFn, ano, mes){
   })();
 }
 
+/* Testa os caminhos conhecidos em alguns dias uteis e devolve o que responde.
+   Separa os tres motivos de falha, que antes se confundiam num null:
+     404 em todos os dias  -> caminho errado (ou indice fora do pacote)
+     401/403               -> credencial sem permissao para este indice
+     200                   -> achou                                        */
+async function resolverCaminho(nome, caminhos, cred, datas){
+  let viu404 = false, negado = null;
+  for(const url of caminhos){
+    for(const d of datas){
+      let r;
+      try{
+        r = await fetch(url + "?data=" + d, {
+          headers: { "client_id": cred.id, "access_token": cred.token, "Accept": "application/json" }
+        });
+      }catch(e){ continue; }
+      if(r.status === 404){ viu404 = true; continue; }
+      if(r.status === 401 || r.status === 403){
+        negado = r.status; break;            /* caminho existe, acesso e que falta */
+      }
+      if(r.ok){
+        console.log("  " + nome + " responde em " + url.replace(BASE,""));
+        return url;
+      }
+    }
+    if(negado) break;
+  }
+  if(negado)
+    throw new Error(nome + ": acesso negado (HTTP " + negado + "). O caminho existe, "
+      + "mas a credencial nao tem permissao para este indice — peca a liberacao do IHFA a ANBIMA.");
+  throw new Error(nome + ": nenhum caminho respondeu" + (viu404 ? " (todos deram 404)" : "")
+    + ". Testados: " + caminhos.map(u => u.replace(BASE,"")).join(", "));
+}
+
+/* alguns dias uteis recentes, para testar o caminho sem depender de um dia especifico */
+function diasDeTeste(ano, mes){
+  const fora = [];
+  let d = new Date(Date.UTC(ano, mes, 0));
+  while(fora.length < 4){
+    const w = d.getUTCDay();
+    if(w !== 0 && w !== 6) fora.push(iso(d));
+    d.setUTCDate(d.getUTCDate() - 1);
+  }
+  return fora;
+}
+
 async function main(){
   const arg = process.argv[2];
   let ano, mes;
@@ -111,9 +171,11 @@ async function main(){
   console.log("  token obtido");
 
   const out = { pre: null, infl: null, multi: null };
+  const teste = diasDeTeste(ano, mes);
 
   /* --- IMA: traz IRF-M e IMA-B na mesma resposta --- */
   try {
+    const IMA = await resolverCaminho("IMA", IMA_CAMINHOS, cred, teste);
     const fim = await ultimoDiaUtilCom(d => buscar(IMA, cred, d), ano, mes);
     const ini = await ultimoDiaUtilCom(d => buscar(IMA, cred, d), ant.a, ant.m);
     if(!fim || !ini) throw new Error("sem publicação do IMA em um dos meses");
@@ -132,6 +194,7 @@ async function main(){
 
   /* --- IHFA --- */
   try {
+    const IHFA = await resolverCaminho("IHFA", IHFA_CAMINHOS, cred, teste);
     const fim = await ultimoDiaUtilCom(d => buscar(IHFA, cred, d), ano, mes);
     const ini = await ultimoDiaUtilCom(d => buscar(IHFA, cred, d), ant.a, ant.m);
     if(!fim || !ini) throw new Error("sem publicação do IHFA em um dos meses");
